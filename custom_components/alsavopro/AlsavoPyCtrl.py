@@ -26,7 +26,6 @@ class AlsavoPro:
         self._set_retries = 0
         self._update_retries = 0
         self._online = False
-        self._last_update_time = None
 
     async def update(self):
         _LOGGER.debug(f"update")
@@ -35,7 +34,6 @@ class AlsavoPro:
             data = await self._session.query_all()
             if data is not None:
                 self._data = data
-                self._last_update_time = datetime.now(timezone.utc)
         except Exception as e:
             if self._update_retries < MAX_UPDATE_RETRIES:
                 self._update_retries += 1
@@ -171,8 +169,13 @@ class AlsavoPro:
         return self._serial_no
 
     @property
-    def last_update_time(self):
-        return self._last_update_time
+    def current_time(self):
+        t = self._session.lstConfigReqTime
+        if t is None:
+            return None
+        if t.tzinfo is None:
+            return t.replace(tzinfo=timezone.utc)
+        return t
 
 
 class PacketHeader:

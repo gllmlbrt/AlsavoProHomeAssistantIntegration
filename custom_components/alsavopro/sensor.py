@@ -343,7 +343,7 @@ class AlsavoProTimeSensor(AlsavoProEntity, CoordinatorEntity, SensorEntity):
 
     @property
     def native_value(self):
-        return self._data_handler.last_update_time
+        return self._data_handler.current_time
 
     @property
     def icon(self):
