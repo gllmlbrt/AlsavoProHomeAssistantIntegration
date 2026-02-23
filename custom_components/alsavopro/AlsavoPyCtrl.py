@@ -29,35 +29,31 @@ class AlsavoPro:
 
     async def update(self):
         _LOGGER.debug(f"update")
-        try:
-            await self._session.connect(self._ip_address, int(self._port_no), int(self._serial_no), self._password)
-            data = await self._session.query_all()
-            if data is not None:
-                self._data = data
-        except Exception as e:
-            if self._update_retries < MAX_UPDATE_RETRIES:
-                self._update_retries += 1
-                await self.update()
-                self._online = True
-            else:
-                self._update_retries = 0
-                _LOGGER.error(f"Unable to update: {e}")
-                self._online = False
+        for attempt in range(MAX_UPDATE_RETRIES):
+            try:
+                await self._session.connect(self._ip_address, int(self._port_no), int(self._serial_no), self._password)
+                data = await self._session.query_all()
+                if data is not None:
+                    self._data = data
+                    self._online = True
+                    return
+            except Exception as e:
+                _LOGGER.warning(f"Update attempt {attempt + 1} failed: {e}")
+        _LOGGER.error("Unable to update after max retries")
+        self._online = False
 
     async def set_config(self, idx: int, value: int):
         _LOGGER.debug(f"set_config({idx}, {value})")
-        try:
-            await self._session.connect(self._ip_address, int(self._port_no), int(self._serial_no), self._password)
-            await self._session.set_config(idx, value)
-        except Exception as e:
-            if self._set_retries < MAX_SET_CONFIG_RETRIES:
-                self._set_retries += 1
-                await self.set_config(idx, value)
+        for attempt in range(MAX_SET_CONFIG_RETRIES):
+            try:
+                await self._session.connect(self._ip_address, int(self._port_no), int(self._serial_no), self._password)
+                await self._session.set_config(idx, value)
                 self._online = True
-            else:
-                self._set_retries = 0
-                _LOGGER.error(f"Unable to set config: {idx}, {value} Error: {e}")
-                self._online = False
+                return
+            except Exception as e:
+                _LOGGER.warning(f"Set config attempt {attempt + 1} failed: {e}")
+        _LOGGER.error(f"Unable to set config: {idx}, {value} after max retries")
+        self._online = False
 
     @property
     def is_online(self) -> bool:
