@@ -15,7 +15,6 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-
 async def async_setup_entry(hass, entry, async_add_devices):
     coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_devices(
@@ -220,6 +219,8 @@ async def async_setup_entry(hass, entry, async_add_devices):
                             EntityCategory.DIAGNOSTIC),
             AlsavoProErrorSensor(coordinator,
                                  "Error messages"),
+            AlsavoProTimeSensor(coordinator,
+                                "Current time"),
         ]
     )
 
@@ -307,6 +308,42 @@ class AlsavoProErrorSensor(AlsavoProEntity, CoordinatorEntity, SensorEntity):
     @property
     def native_value(self):
         return self._data_handler.errors
+
+    @property
+    def icon(self):
+        return self._icon
+
+    async def async_update(self):
+        """Get the latest data."""
+        self._data_handler = self.data_coordinator.data_handler
+
+
+class AlsavoProTimeSensor(AlsavoProEntity, CoordinatorEntity, SensorEntity):
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator: AlsavoProDataCoordinator,
+                 name: str):
+        super().__init__(coordinator)
+        self.data_coordinator = coordinator
+        self._data_handler = self.data_coordinator.data_handler
+        self._name = name
+        self._icon = "mdi:clock"
+        self._attr_device_class = SensorDeviceClass.TIMESTAMP
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return f"{self._data_handler.unique_id}_{self._name}"
+
+    @property
+    def native_value(self):
+        return self._data_handler.last_update_time
 
     @property
     def icon(self):
