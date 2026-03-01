@@ -6,6 +6,7 @@ import async_timeout
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
+    UpdateFailed,
 )
 
 from homeassistant.const import (
@@ -87,6 +88,7 @@ class AlsavoProDataCoordinator(DataUpdateCoordinator):
                 return self.data_handler
         except Exception as ex:
             _LOGGER.debug("_async_update_data timed out")
+            raise UpdateFailed(f"Error communicating with device: {ex}") from ex
 
 
 class AlsavoProEntity:

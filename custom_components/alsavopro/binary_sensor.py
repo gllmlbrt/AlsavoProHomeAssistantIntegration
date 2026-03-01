@@ -44,6 +44,11 @@ class AlsavoProConnectivitySensor(AlsavoProEntity, CoordinatorEntity, BinarySens
         """Return True if the heat pump is connected."""
         return self._data_handler.is_online
 
+    @property
+    def available(self) -> bool:
+        """Return True if we can communicate with the device."""
+        return self._data_handler.is_online
+
 
 class AlsavoProFrostProtectionSensor(AlsavoProEntity, CoordinatorEntity, BinarySensorEntity):
     _attr_has_entity_name = True

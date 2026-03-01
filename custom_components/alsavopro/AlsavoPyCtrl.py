@@ -34,11 +34,12 @@ class AlsavoPro:
             data = await self._session.query_all()
             if data is not None:
                 self._data = data
+            self._online = True
+            self._update_retries = 0
         except Exception as e:
             if self._update_retries < MAX_UPDATE_RETRIES:
                 self._update_retries += 1
                 await self.update()
-                self._online = True
             else:
                 self._update_retries = 0
                 _LOGGER.error(f"Unable to update: {e}")
@@ -61,7 +62,7 @@ class AlsavoPro:
 
     @property
     def is_online(self) -> bool:
-        return self._data.parts > 0
+        return self._online
 
     @property
     def unique_id(self):
